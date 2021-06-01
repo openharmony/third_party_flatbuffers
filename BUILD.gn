@@ -1,0 +1,20 @@
+# Copyright (c) Huawei Technologies Co., Ltd. 2021-2021. All rights reserved.
+
+import("//build/ohos.gni")
+
+# Lets callers do '#include <flatbuffers/reflection.h>'
+config("flatbuffers_config") {
+  include_dirs = [ "include" ]
+}
+
+ohos_shared_library("flatbuffers_mini") {
+  include_dirs = [
+    "include",
+    "grpc",
+  ]
+
+  sources = [ "//third_party/flatbuffers/src/reflection.cpp" ]
+
+  public_configs = [ ":flatbuffers_config" ]
+  subsystem_name = "distributeddatamgr"
+}

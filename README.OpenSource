@@ -5,7 +5,7 @@
         "License File": "LICENSE.txt",
         "Version Number": "1.11.0",
         "Owner": "wanghancai@huawei.com",
-        "Upstream URL": "https://www.sqlite.org/2020/sqlite-amalgamation-3320300.zip",
+        "Upstream URL": "https://github.com/google/flatbuffers/releases/tag/v1.11.0",
         "Description": "FlatBuffers is an efficient cross platform serialization library for C++, C#, C, Go, Java, JavaScript, PHP, and Python. It was originally created at Google for game development and other performance-c"
     }
 ]

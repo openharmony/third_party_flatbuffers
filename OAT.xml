@@ -85,15 +85,12 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filename" name="samples/monster.bfbs" desc="Binary files that do not involve infringement."/>
                 <filteritem type="filename" name="tests/FlatBuffers.Test/Resources/monsterdata_test.mon" desc="Binary files that do not involve infringement."/>
                 <filteritem type="filename" name="samples/android/gradle/wrapper/gradle-wrapper.jar" desc="Binary files that do not involve infringement."/>
-                <filteritem type="filename" name="grpc/src/compiler/go_generator.cc" desc="Binary files that do not involve infringement."/>
-                <filteritem type="filename" name="BUILD.gn" desc="Binary files that do not involve infringement."/>
-                <filteritem type="filename" name="android/jni/build_flatc.bat" desc="Binary files that do not involve infringement."/>
             </filefilter>
         </filefilterlist>
         <licensematcherlist>
             <licensematcher name="zlib/libpng License" desc="zlib/png license">
                 <licensetext name="
-                      This software is provided 'as-is', without any express or implied
+                      This software is provided &apos;as-is&apos;, without any express or implied
                       warranty.  In no event will the authors be held liable for any damages
                       arising from the use of this software.
 

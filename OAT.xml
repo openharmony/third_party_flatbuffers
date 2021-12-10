@@ -72,5 +72,61 @@ Note:If the text contains special characters, please escape them according to th
                 <filteritem type="filepath" name="rust/flatbuffers/Cargo.toml" desc="The original file of the third-party software does not contain the license header statement."/>
             </filefilter>
         </filefilterlist>
+        <licensematcherlist>
+            <licensematcher name="zlib/libpng License" desc="zlib/png license">
+                <licensetext name="
+                         # Copyright (c) Huawei Technologies Co., Ltd. 2021-2021. All rights reserved.
+                 " desc=""/>
+                <licensetext name="
+                         *
+                         * Copyright 2015, Google Inc.
+                         * All rights reserved.
+                         *
+                         * Redistribution and use in source and binary forms, with or without
+                         * modification, are permitted provided that the following conditions are
+                         * met:
+                         *
+                         *     * Redistributions of source code must retain the above copyright
+                         * notice, this list of conditions and the following disclaimer.
+                         *     * Redistributions in binary form must reproduce the above
+                         * copyright notice, this list of conditions and the following disclaimer
+                         * in the documentation AN/or other materials provided with the
+                         * distribution.
+                         *     * Neither the name of Google Inc. nor the names of its
+                         * contributors may be used to endorse or promote products derived from
+                         * this software without specific prior written permission.
+                         *
+                         * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+                         * &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+                         * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+                         * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+                         * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+                         * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+                         * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+                         * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+                         * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+                         * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+                         * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+                         *
+                 " desc=""/>
+                <licensetext name="
+                        @rem Copyright (c) 2013 Google, Inc.
+                        @rem
+                        @rem This software is provided 'as-is', without any express or implied
+                        @rem warranty.  In no event will the authors be held liable for any damages
+                        @rem arising from the use of this software.
+                        @rem Permission is granted to anyone to use this software for any purpose,
+                        @rem including commercial applications, and to alter it and redistribute it
+                        @rem freely, subject to the following restrictions:
+                        @rem 1. The origin of this software must not be misrepresented; you must not
+                        @rem claim that you wrote the original software. If you use this software
+                        @rem in a product, an acknowledgment in the product documentation would be
+                        @rem appreciated but is not required.
+                        @rem 2. Altered source versions must be plainly marked as such, and must not be
+                        @rem misrepresented as being the original software.
+                        @rem 3. This notice may not be removed or altered from any source distribution.
+                 " desc=""/>
+            </licensematcher>
+        </licensematcherlist>
     </oatconfig>
 </configuration>

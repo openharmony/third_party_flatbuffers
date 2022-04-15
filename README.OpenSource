@@ -1,0 +1,11 @@
+[
+  {
+    "Name": "FlatBuffers",
+    "License": "Apache-2.0",
+    "License File": "LICENSE.txt",
+    "Version Number": "2.0.0",
+    "Owner": "sunsuodong@huawei.com",
+    "Upstream URL": "https://github.com/google/flatbuffers/tree/v2.0.0",
+    "Description": "FlatBuffers: Memory Efficient Serialization Library"
+  }
+]

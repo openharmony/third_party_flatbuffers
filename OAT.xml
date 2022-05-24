@@ -52,7 +52,7 @@
             <policy name="projectPolicy" desc="">
                 <policyitem type="license" name="*" path=".*" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc=""/>
                 <policyitem type="copyright" name="*" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc=""/>
-                <!--policyitem type="compatibility" name="GPL-2.0+" path=".*" desc="Process that runs independently, invoked by the X process."/-->
+                <policyitem type="compatibility" name="GPL-2.0+" path=".*" desc="Process that runs independently, invoked by the X process."/>
                 <!--policyitem type="license" name="LGPL" path=".*" desc="Dynamically linked by module X"/-->
                 <!--policyitem type="copyright" name="xxx" path=".*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Developed by X Company"/-->
             </policy>

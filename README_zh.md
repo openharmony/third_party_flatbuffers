@@ -35,7 +35,23 @@
 * TypeScript
 
 *and more in progress...*
-
+## FlatBuffers使用步骤
+1. 按照[教程](docs/source/Tutorial.md)编写fbs文件，生成C/C++的代码可以参考[C教程](docs/source/CppUsage.md)和[C++教程](docs/source/CUsage.md)。
+2. 按照[教程](docs/source/Building.md)编译项目，并得到flactc工具。
+3. 使用flatc工具生成接口代码。
+4. 在鸿蒙中使用FlatBuffers
+## OpenHarmony如何集成FlatBuffers
+1. 头文件引入
+```c++
+#include "flatbuffers/flatbuffers.h"
+```
+2. BUILD.gn添加头文件的引用
+```gn
+include_dirs = [
+    "//third_party/flatbuffers/include"
+    ]
+```
+3. 在代码中使用生成的接口代码序列化和反序列化数据。
 ## 贡献
 * [FlatBuffers Google Group][] to discuss FlatBuffers with other developers and users.
 * [FlatBuffers Issues Tracker][] to submit an issue.

@@ -59,6 +59,13 @@
             <filefilter name="defaultFilter" desc="Files not to check">
                 <filteritem type="filename" name="BUILD|*.png|*.jar|*.bfbs" desc="desc files"/>
                 <filteritem type="filepath" name="tests/.*" desc="test files"/>
+                <filteritem type="filepath" name="BUILD.bazel" desc=""/>
+                <filteritem type="filepath" name="grpc/src/compiler/go_generator.cc" desc=""/>
+                <filteritem type="filepath" name="swift/FlatBuffers.podspec" desc=""/>
+                <filteritem type="filepath" name="kotlin/build.gradle.kts" desc=""/>
+                <filteritem type="filepath" name="rust/flatbuffers/Cargo.toml" desc=""/>
+                <filteritem type="filepath" name="rust/flexbuffers/Cargo.toml" desc=""/>
+                <filteritem type="filepath" name="android/.project" desc=""/>
             </filefilter>
         </filefilterlist>
     </oatconfig>

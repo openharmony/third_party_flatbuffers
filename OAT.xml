@@ -59,6 +59,16 @@
             <filefilter name="defaultFilter" desc="Files not to check">
                 <filteritem type="filename" name="BUILD|*.png|*.jar|*.bfbs" desc="desc files"/>
                 <filteritem type="filepath" name="tests/.*" desc="test files"/>
+                <filteritem type="filepath" name="rust/flatbuffers/Cargo.toml" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="rust/flexbuffers/Cargo.toml" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="android/AndroidManifest.xml" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="android/.project" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="kotlin/build.gradle.kts" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="swift/FlatBuffers.podspec" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="BUILD.bazel" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="conanfile.py" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="grpc/src/compiler/go_generator.cc" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
+                <filteritem type="filepath" name="pom.xml" desc="三方开源，不需要检测文件头是否遗漏版权声明"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>

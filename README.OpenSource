@@ -3,9 +3,9 @@
     "Name": "openEuler:flatbuffers",
     "License": "Apache-2.0",
     "License File": "LICENSE.txt",
-    "Version Number": "2.0.0-1.oe2203",
+    "Version Number": "2.0.0-2.oe2203sp3",
     "Owner": "chengfeng27@huawei.com",
-    "Upstream URL": "http://repo.openeuler.org/openEuler-22.03-LTS/EPOL/main/source/Packages/flatbuffers-2.0.0-1.oe2203.src.rpm",
+    "Upstream URL": "https://repo.openeuler.org/openEuler-22.03-LTS-SP3/source/Packages/flatbuffers-2.0.0-2.oe2203sp3.src.rpm",
     "Description": "FlatBuffers: Memory Efficient Serialization Library"
   }
 ]

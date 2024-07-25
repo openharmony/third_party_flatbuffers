@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
+import("//build/ohos.gni")
 
 action("flatbuffers_install_action") {
   script = "//third_party/flatbuffers/install.py"
@@ -40,4 +41,9 @@ action("flatbuffers_install_action") {
     "--source-dir",
     rebase_path("//third_party/flatbuffers"),
   ]
+}
+ohos_static_library("libflatbuffers_static") {
+  deps = [ ":flatbuffers_install_action" ]
+  part_name = "flatbuffers"
+  subsystem_name = "thirdparty"
 }

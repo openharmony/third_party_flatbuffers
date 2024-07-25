@@ -27,9 +27,16 @@
         ]
       },
       "build": {
-        "sub_component": [
-        ],
+        "sub_component": [ "//third_party/flatbuffers:libflatbuffers_static" ],
         "inner_kits": [
+                {
+                    "name": "//third_party/flatbuffers:libflatbuffers_static",
+                    "header": {
+                        "header_base": "//third_party/flatbuffers/include",
+                        "header_files": [
+                        ]
+                    }
+                }
         ],
         "test": [
         ]

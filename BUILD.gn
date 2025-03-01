@@ -14,36 +14,43 @@
 # ============================================================================
 import("//build/ohos.gni")
 
-action("flatbuffers_install_action") {
-  script = "//third_party/flatbuffers/install.py"
-  outputs = [
-    "${target_gen_dir}/flatbuffers-2.0.0/include/flatbuffers/base.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/code_generators.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/flatbuffers.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/flatc.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/flexbuffers.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/grpc.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/hash.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/idl.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/minireflect.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/pch",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/reflection_generated.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/reflection.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/registry.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/stl_emulation.h",
-    "${target_gen_dir}/flatbuffers-2.0.0/include/util.h",
-  ]
-  inputs = [ "//third_party/flatbuffers/v2.0.0.tar.gz" ]
-  args = []
-  args = [
-    "--gen-dir",
-    rebase_path("${target_gen_dir}", root_build_dir),
-    "--source-dir",
-    rebase_path("//third_party/flatbuffers"),
+ohos_source_set("flatbuffers_source") {
+  sources = [
+    "include/flatbuffers/allocator.h",
+    "include/flatbuffers/array.h",
+    "include/flatbuffers/base.h",
+    "include/flatbuffers/buffer.h",
+    "include/flatbuffers/buffer_ref.h",
+    "include/flatbuffers/code_generator.h",
+    "include/flatbuffers/code_generators.h",
+    "include/flatbuffers/default_allocator.h",
+    "include/flatbuffers/detached_buffer.h",
+    "include/flatbuffers/file_manager.h",
+    "include/flatbuffers/flatbuffer_builder.h",
+    "include/flatbuffers/flatbuffers.h",
+    "include/flatbuffers/flatc.h",
+    "include/flatbuffers/flex_flat_util.h",
+    "include/flatbuffers/flexbuffers.h",
+    "include/flatbuffers/grpc.h",
+    "include/flatbuffers/hash.h",
+    "include/flatbuffers/idl.h",
+    "include/flatbuffers/minireflect.h",
+    "include/flatbuffers/reflection.h",
+    "include/flatbuffers/reflection_generated.h",
+    "include/flatbuffers/registry.h",
+    "include/flatbuffers/stl_emulation.h",
+    "include/flatbuffers/string.h",
+    "include/flatbuffers/struct.h",
+    "include/flatbuffers/table.h",
+    "include/flatbuffers/util.h",
+    "include/flatbuffers/vector.h",
+    "include/flatbuffers/vector_downward.h",
+    "include/flatbuffers/verifier.h",
   ]
 }
+
 ohos_static_library("libflatbuffers_static") {
-  deps = [ ":flatbuffers_install_action" ]
+  deps = [ ":flatbuffers_source" ]
   part_name = "flatbuffers"
   subsystem_name = "thirdparty"
 }

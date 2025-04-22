@@ -58,8 +58,13 @@ action("flatbuffers_install_action") {
   ]
 }
 
+config("flatbuffers_include") {
+  include_dirs = [ "./include/" ]
+}
+
 ohos_static_library("libflatbuffers_static") {
   deps = [ ":flatbuffers_install_action" ]
   part_name = "flatbuffers"
   subsystem_name = "thirdparty"
+  public_configs = [ ":flatbuffers_include" ]
 }

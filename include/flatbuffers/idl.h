@@ -45,27 +45,27 @@ namespace flatbuffers {
 // of type tokens.
 // clang-format off
 #define FLATBUFFERS_GEN_TYPES_SCALAR(TD) \
-  TD(NONE,     "",       uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte, UInt8, 0) \
-  TD(UTYPE,    "",       uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte, UInt8, 1) /* begin scalar/int */ \
-  TD(BOOL,     "bool",   uint8_t,  boolean,bool,    bool,   bool,    bool, Boolean, Bool, 2) \
-  TD(CHAR,     "byte",   int8_t,   byte,   int8,    sbyte,  int8,    i8,   Byte, Int8, 3) \
-  TD(UCHAR,    "ubyte",  uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte, UInt8, 4) \
-  TD(SHORT,    "short",  int16_t,  short,  int16,   short,  int16,   i16,  Short, Int16, 5) \
-  TD(USHORT,   "ushort", uint16_t, short,  uint16,  ushort, uint16,  u16,  UShort, UInt16, 6) \
-  TD(INT,      "int",    int32_t,  int,    int32,   int,    int32,   i32,  Int, Int32, 7) \
-  TD(UINT,     "uint",   uint32_t, int,    uint32,  uint,   uint32,  u32,  UInt, UInt32, 8) \
-  TD(LONG,     "long",   int64_t,  long,   int64,   long,   int64,   i64,  Long, Int64, 9) \
-  TD(ULONG,    "ulong",  uint64_t, long,   uint64,  ulong,  uint64,  u64,  ULong, UInt64, 10) /* end int */ \
-  TD(FLOAT,    "float",  float,    float,  float32, float,  float32, f32,  Float, Float32, 11) /* begin float */ \
-  TD(DOUBLE,   "double", double,   double, float64, double, float64, f64,  Double, Double, 12) /* end float/scalar */
+  TD(NONE,     "",       uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte,   UInt8,    UInt8, 0) \
+  TD(UTYPE,    "",       uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte,   UInt8,    UInt8, 1) /* begin scalar/int */ \
+  TD(BOOL,     "bool",   uint8_t,  boolean,bool,    bool,   bool,    bool, Boolean, Bool,     Bool, 2) \
+  TD(CHAR,     "byte",   int8_t,   byte,   int8,    sbyte,  int8,    i8,   Byte,    Int8,     UInt8, 3) \
+  TD(UCHAR,    "ubyte",  uint8_t,  byte,   byte,    byte,   uint8,   u8,   UByte,   UInt8,    UInt8, 4) \
+  TD(SHORT,    "short",  int16_t,  short,  int16,   short,  int16,   i16,  Short,   Int16,    Int16, 5) \
+  TD(USHORT,   "ushort", uint16_t, short,  uint16,  ushort, uint16,  u16,  UShort,  UInt16,   UInt16, 6) \
+  TD(INT,      "int",    int32_t,  int,    int32,   int,    int32,   i32,  Int,     Int32,    Int32, 7) \
+  TD(UINT,     "uint",   uint32_t, int,    uint32,  uint,   uint32,  u32,  UInt,    UInt32,   UInt32, 8) \
+  TD(LONG,     "long",   int64_t,  long,   int64,   long,   int64,   i64,  Long,    Int64,    Int64, 9) \
+  TD(ULONG,    "ulong",  uint64_t, long,   uint64,  ulong,  uint64,  u64,  ULong,   UInt64,   UInt64, 10) /* end int */ \
+  TD(FLOAT,    "float",  float,    float,  float32, float,  float32, f32,  Float,   Float32,  Float32, 11) /* begin float */ \
+  TD(DOUBLE,   "double", double,   double, float64, double, float64, f64,  Double,  Double,   Float64, 12) /* end float/scalar */
 #define FLATBUFFERS_GEN_TYPES_POINTER(TD) \
-  TD(STRING,   "string", Offset<void>,   int, int, StringOffset, int, unused, Int, Offset<String>, 13) \
-  TD(VECTOR,   "",       Offset<void>,   int, int, VectorOffset, int, unused, Int, Offset<UOffset>, 14) \
-  TD(VECTOR64, "",       Offset64<void>, int, int, VectorOffset, int, unused, Int, Offset<UOffset>, 18) \
-  TD(STRUCT,   "",       Offset<void>,   int, int, int,          int, unused, Int, Offset<UOffset>, 15) \
-  TD(UNION,    "",       Offset<void>,   int, int, int,          int, unused, Int, Offset<UOffset>, 16)
+  TD(STRING,   "string", Offset<void>,   int, int, StringOffset, int, unused, Int, Offset<String>,  IntNative, 13) \
+  TD(VECTOR,   "",       Offset<void>,   int, int, VectorOffset, int, unused, Int, Offset<UOffset>, IntNative, 14) \
+  TD(VECTOR64, "",       Offset64<void>, int, int, VectorOffset, int, unused, Int, Offset<UOffset>, IntNative, 18) \
+  TD(STRUCT,   "",       Offset<void>,   int, int, int,          int, unused, Int, Offset<UOffset>, IntNative, 15) \
+  TD(UNION,    "",       Offset<void>,   int, int, int,          int, unused, Int, Offset<UOffset>, IntNative, 16)
 #define FLATBUFFERS_GEN_TYPE_ARRAY(TD) \
-  TD(ARRAY,    "",       int,            int, int, int,          int, unused, Int, Offset<UOffset>, 17)
+  TD(ARRAY,    "",       int,            int, int, int,          int, unused, Int, Offset<UOffset>, IntNative, 17)
 // The fields are:
 // - enum
 // - FlatBuffers schema type.
@@ -77,6 +77,7 @@ namespace flatbuffers {
 // - Kotlin type.
 // - Rust type.
 // - Swift type.
+// - Cangjie type.
 // - enum value (matches the reflected values)
 
 // using these macros, we can now write code dealing with types just once, e.g.
@@ -84,7 +85,7 @@ namespace flatbuffers {
 /*
 switch (type) {
   #define FLATBUFFERS_TD(ENUM, IDLTYPE, CTYPE, JTYPE, GTYPE, NTYPE, PTYPE, \
-                         RTYPE, KTYPE, STYPE, ...) \
+                         RTYPE, KTYPE, STYPE, CJTYPE, ...) \
     case BASE_TYPE_ ## ENUM: \
       // do something specific to CTYPE here
     FLATBUFFERS_GEN_TYPES(FLATBUFFERS_TD)
@@ -117,7 +118,7 @@ __extension__  // Stop GCC complaining about trailing comma with -Wpendantic.
 #endif
 enum BaseType {
   #define FLATBUFFERS_TD(ENUM, IDLTYPE, \
-              CTYPE, JTYPE, GTYPE, NTYPE, PTYPE, RTYPE, KTYPE, STYPE, ENUM_VALUE) \
+              CTYPE, JTYPE, GTYPE, NTYPE, PTYPE, RTYPE, KTYPE, STYPE, CJTYPE, ENUM_VALUE) \
     BASE_TYPE_ ## ENUM = ENUM_VALUE,
     FLATBUFFERS_GEN_TYPES(FLATBUFFERS_TD)
   #undef FLATBUFFERS_TD
@@ -731,6 +732,7 @@ struct IDLOptions {
     kNim = 1 << 17,
     kProto = 1 << 18,
     kKotlinKmp = 1 << 19,
+    kCangjie = 1 << 20,
     kMAX
   };
 
@@ -1264,6 +1266,13 @@ bool GeneratePythonGRPC(const Parser &parser, const std::string &path,
 // See idl_gen_grpc.cpp.
 extern bool GenerateSwiftGRPC(const Parser &parser, const std::string &path,
                               const std::string &file_name);
+
+// Generate CangJie classes.
+// See idl_gen_cangjie.cpp
+extern bool GenerateCangjieGRPC(const Parser &parser,
+                                const std::string &path,
+                                const std::string &file_name);
+
 
 extern bool GenerateTSGRPC(const Parser &parser, const std::string &path,
                            const std::string &file_name);

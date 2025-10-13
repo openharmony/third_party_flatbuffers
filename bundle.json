@@ -36,6 +36,9 @@
                         "header_files": [
                         ]
                     }
+                },
+                {
+                    "name": "//third_party/flatbuffers:flatbuffers_for_cangjie"
                 }
         ],
         "test": [

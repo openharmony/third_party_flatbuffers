@@ -68,3 +68,15 @@ ohos_static_library("libflatbuffers_static") {
   subsystem_name = "thirdparty"
   public_configs = [ ":flatbuffers_include" ]
 }
+
+ohos_copy("flatbuffers_for_cangjie") {
+  sources = [ 
+    "cangjie/decode.cj",
+    "cangjie/flatbuffer_object.cj",
+    "cangjie/table.cj",
+  ]
+
+  outputs = [ "${target_out_dir}/cangjie/{{source_file_part}}" ]
+  part_name = "flatbuffers"
+  subsystem_name = "thirdparty"
+}

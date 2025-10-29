@@ -78,6 +78,7 @@ public:
     {
         namespace_depth = 0;
         code_.SetPadding("    ");
+        code_.SetValue("NAMESPACE", "{}");
         // keywords of Cangjie
         static const char *const keywords[] = {
           "as",
@@ -602,14 +603,14 @@ public:
             code_.SetValue("fieldNameCaps", MakeScreamingCamel(field.name));
             code_.SetValue("BASEVALUE", GenTypeBasic(vectortype, false));
             code_ += "let LENGTH: Int64 = {{ACCESS}}.getVectorLenBySlot({{fieldNameCaps}})";
-            code_ += "var arr: Array<Option<{{VALUETYPE}}>> = Array<Option<{{VALUETYPE}}>>>(LENGTH, repeat: Option<{{VALUETYPE}}>.None)";
+            code_ += "var arr = Array<?{{VALUETYPE}}>(LENGTH, repeat: None<{{VALUETYPE}}>)";
             code_ += "let start: UInt32 = {{ACCESS}}.getVectorStartBySlot({{fieldNameCaps}})";
             code_ += "for (i in 0..LENGTH) {";
             Indent();
             code_ += "let p: UInt32 = start + UInt32(i) * ELEMENT_STRIDE";
             code_ += "arr[i] = if ({{ACCESS}}.getIndirect(p) == p) {";
             Indent();
-            code_ += "Option<{{VALUETYPE}}>.None";
+            code_ += "None<{{VALUETYPE}}>";
             Outdent();
             code_ += "} else {";
             Indent();
@@ -626,16 +627,53 @@ public:
         if (vectortype.base_type == BASE_TYPE_UNION) {
             code_ += "let vectorLoc: UInt32 = " + GenIndirect("UInt32(o) + {{ACCESS}}.pos");
             code_ += "let vectorStart = vectorLoc + 4";
-            std::string tmpStr = R"(
-            if( o == 0) {
-                return FlatBufferObject(Array<UInt8>(), 0);
-            } else {
-                return this.table.getUnion(vectorStart + UInt32(index) * 4)
-            }
-            )";
+            std::string tmpStr = R"(if (o == 0) {
+            FlatBufferObject(Array<UInt8>(), 0)
+        } else {
+            table.getUnion(vectorStart + UInt32(index) * 4)
+        })";
             code_ += tmpStr;
             Outdent();
             code_ += "}";
+            code_ += "func Get" + MakeCamel(field.name, true) + "Size(): Int64 {";
+            Indent();
+            code_ += "table.getVectorLenBySlot(" + MakeScreamingCamel(field.name) + "_TYPE)";
+            Outdent();
+            code_ += "}";
+            code_ += "func Get" + MakeCamel(field.name, true) + "Type(index: UInt32): " +
+                GenType(vectortype.enum_def->underlying_type) + " {";
+            Indent();
+            code_ += "let start = {{ACCESS}}.getVectorStartBySlot({{fieldNameCaps}})";
+            code_ += "EnumValues" + GenType(vectortype.enum_def->underlying_type) +
+                "({{ACCESS}}.getUInt8(start + index))";
+            Outdent();
+            code_ += "}\n";
+            for (auto& u_it : vectortype.enum_def->Vals()) {
+                auto& ev = *u_it;
+                if (ev.union_type.base_type == BASE_TYPE_NONE) {
+                    continue;
+                }
+                auto get_type_method =
+                    "Get" + MakeCamel(field.name, true) + "As" + MakeCamel(ev.name, true);
+                auto enum_name = GetUnionElement(ev, true, true);
+                std::string option_name = "?" + enum_name;
+                code_ += "{{ACCESS_TYPE}}func " + get_type_method + "(index: UInt32) : " + option_name + " {";
+                Indent();
+                code_ += GenOffset();
+                code_ += "let vectorStart = " + GenIndirect("UInt32(o) + {{ACCESS}}.pos");
+                code_ += "match (this.Get" + MakeCamel(field.name, true) + "Type(index)) {";
+                Indent();
+                auto ctor = enum_name + "({{ACCESS}}.bytes, vectorStart + (index + 1) * 4)";
+                std::string option_some = "Some(" + ctor + ")";
+                std::string option_none = "None<" + enum_name + ">";
+                code_ += "case " + GenType(vectortype.enum_def->underlying_type) + "." + field.value.type.enum_def->name
+                    + "_" + MakeScreamingCamel(ev.name) + " => " + option_some;
+                code_ += "case _ => " + option_none;
+                Outdent();
+                code_ += "}";
+                Outdent();
+                code_ += "}\n";
+            }
             return;
         }
 
@@ -644,7 +682,8 @@ public:
             code_ += "let ELEMENT_STRIDE: UInt32 = 4";
             code_.SetValue("fieldNameCaps", MakeScreamingCamel(field.name));
             code_ += "let LENGTH: Int64 = {{ACCESS}}.getVectorLenBySlot({{fieldNameCaps}})";
-            code_ += "var arr: Array<Option<{{VALUETYPE}}>> =  Array<Option<{{VALUETYPE}}>>(LENGTH, repeat: None<{{VALUETYPE}}>)";
+            code_ += "var arr: Array<Option<{{VALUETYPE}}>> = Array<Option<{{VALUETYPE}}>>(LENGTH,"
+                " repeat: None<{{VALUETYPE}}>)";
             code_ += "let start: UInt32 = {{ACCESS}}.getVectorStartBySlot({{fieldNameCaps}})";
             code_ += "for (i in 0..LENGTH) {";
             Indent();
@@ -922,23 +961,23 @@ public:
 
     std::string NameWrappedInNameSpace(const EnumDef& enum_def) const
     {
-        return WrapInNameSpace(enum_def.defined_namespace, Name(enum_def));
+        return WrapInNameSpace(enum_def.defined_namespace, MakeCamel(enum_def.name, false));
     }
 
     std::string NameWrappedInNameSpace(const StructDef& struct_def) const
     {
-        return WrapInNameSpace(struct_def.defined_namespace, Name(struct_def));
+        return WrapInNameSpace(struct_def.defined_namespace, MakeCamel(struct_def.name, false));
     }
 
     std::string GenTypeBasic(const Type& type, bool can_override) const
     {
         // clang-format off
         static const char * const char_type[] = {
-          #define FLATBUFFERS_TD(ENUM, IDLTYPE, \
-                  CTYPE, JTYPE, GTYPE, NTYPE, PTYPE, RTYPE, KTYPE, STYPE, CJTYPE, ...) \
-            #CJTYPE,
+        #define FLATBUFFERS_TD(ENUM, IDLTYPE, \
+                CTYPE, JTYPE, GTYPE, NTYPE, PTYPE, KTYPE, RTYPE, STYPE, CJTYPE, ...) \
+        #CJTYPE,
             FLATBUFFERS_GEN_TYPES(FLATBUFFERS_TD)
-          #undef FLATBUFFERS_TD
+        #undef FLATBUFFERS_TD
         };
         // clang-format on
         if (can_override) {

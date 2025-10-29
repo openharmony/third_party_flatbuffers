@@ -202,6 +202,6 @@ class Table {
     }
 
     public func getUnion(offsetVal: UInt32): FlatBufferObject {
-        FlatBufferObject(bytes, offsetVal + getUOffset(offsetVal))
+        FlatBufferObject(bytes, getIndirect(offsetVal))
     }
 }

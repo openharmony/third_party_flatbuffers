@@ -1,5 +1,5 @@
 // Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
-// This source file is part of the Cangjie project, licensed under Apache-2.0 
+// This source file is part of the Cangjie project, licensed under Apache-2.0
 // with Runtime Library Exception.
 //
 // See https://cangjie-lang.cn/pages/LICENSE for license information.
@@ -9,7 +9,7 @@ let SIZE_OF_OFFSET: UInt32 = 4
 let SIZE_OF_UINT32: UInt32 = 4
 
 
-/**
+/*
  * Table wraps a byte slice and provides read access to its data.
  */
 class Table {
@@ -21,10 +21,12 @@ class Table {
         this.pos = position
     }
 
-    /** Return the field's offset from Pos stored in vtable slot. */
+    /*
+     * Return the field's offset from Pos stored in vtable slot.
+     */
     func offset(slot: UInt16): UInt16 {
         let vtableRoot: UInt32 = UInt32(Int64(this.pos) - Int64(this.getSOffset(this.pos)))
-        /* NOTE: the slot should be less than the size of vtable. */
+        // NOTE: the slot should be less than the size of vtable.
         if (slot < this.getUInt16(vtableRoot)) {
             return this.getUInt16(vtableRoot + UInt32(slot))
         }
@@ -191,12 +193,16 @@ class Table {
         return getFloat64(this.pos + UInt32(offsetVal))
     }  
 
-    /* Return the signed offset of table from offsetVal. */
+    /*
+     * Return the signed offset of table from offsetVal.
+     */
     private func getSOffset(offsetVal: UInt32): Int32 {
         return getInt32(this.bytes[Int64(offsetVal)..Int64(offsetVal + 4)])
     }
 
-    /* Return the unsigned offset of table from offsetVal. */
+    /* 
+     * Return the unsigned offset of table from offsetVal.
+     */
     private func getUOffset(offsetVal: UInt32): UInt32 {
         return getUInt32(this.bytes[Int64(offsetVal)..Int64(offsetVal + 4)])
     }

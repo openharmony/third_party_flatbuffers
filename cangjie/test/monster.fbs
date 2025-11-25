@@ -1,0 +1,71 @@
+// Copyright (c) Huawei Technologies Co., Ltd. 2025. All rights reserved.
+// This source file is part of the Cangjie project, licensed under Apache-2.0 
+// with Runtime Library Exception.
+//
+// See https://cangjie-lang.cn/pages/LICENSE for license information.
+
+namespace MyGame.Sample;
+
+enum Color:uint { Red = 0, Green, Blue = 2 }
+
+union Equipment { Weapon, Shield } // Optionally add more tables.
+
+struct Vec11 {
+  v0:byte;
+  v1:bool;
+  v2:short;
+  v3:int;
+  v4:long;
+  v5:ubyte;
+  v6:ushort;
+  v7:uint;
+  v8:ulong;
+  v9:float;
+  v10:double;
+}
+
+table Monster {
+  pos:Vec11;
+  m0:byte;
+  m1:bool;
+  m2:short;
+  m3:int;
+  m4:long = 100;
+  m5:ubyte;
+  m6:ushort;
+  m7:uint;
+  m8:ulong;
+  m9:float = 0x1.1p3;
+  m10:double = +inf;
+  name:string;
+  friendly:bool = false (deprecated);
+  inventory:[ubyte];
+  color:Color = Blue;
+  colorList:[Color];
+  curWeapon:Weapon;
+  weapons:[Weapon];
+  curShield:Shield;
+  equipped:Equipment;
+  list:[Equipment];
+  path:[Vec11];
+}
+
+table Weapon {
+  name:string;
+  damage:short;
+  aux:Gem;
+}
+
+table Shield {
+  name:string;
+  weight:float;
+  color:Color;
+  aux:Gem;
+}
+
+table Gem {
+  size:float;
+}
+
+root_type Monster;
+

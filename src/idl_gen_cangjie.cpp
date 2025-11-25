@@ -186,6 +186,7 @@ public:
             const auto& struct_def = **it;
             if (struct_def.fixed && !struct_def.generated) {
                 GenStructReader(struct_def);
+                GenStructWriter(struct_def);
             }
         }
 
@@ -248,7 +249,29 @@ public:
             Indent();
             for (auto element : struct_def.fields.vec) {
                 const auto& field = *element;
-                code_ += Name(field) + " = 0"; // FIXME: all set to be zero?
+                code_.SetValue("CONSTANT", CangjieConstant(field));
+                code_ += Name(field) + " = {{CONSTANT}}";
+            }
+            Outdent();
+            code_ += "}";
+            code_ += "";
+            // value constructor
+            code_ += "init(";
+            Indent();
+            for (auto element = struct_def.fields.vec.begin(); element < struct_def.fields.vec.end();
+            ++element) {
+                const auto& field = **element;
+                code_.SetValue("CONSTANT", CangjieConstant(field));
+                code_ += Name(field) + ": " + GenType(field.value.type) + "\\";
+                if (element < struct_def.fields.vec.end() - 1) code_ += ",";
+            }
+            Outdent();
+            code_ += ") {";
+            Indent();
+            for (auto element : struct_def.fields.vec) {
+                const auto& field = *element;
+                code_.SetValue("CONSTANT", CangjieConstant(field));
+                code_ += "this." + Name(field) + " = " + Name(field);
             }
             Outdent();
             code_ += "}";
@@ -257,7 +280,7 @@ public:
             code_ += "init(buf: Array<UInt8>, pos: UInt32) {";
             Indent();
             code_ +=
-                "boundsCheck(buf, Int64(pos + " + std::to_string(struct_def.fields.vec.size()) + " * BYTE_ALIGNMENT))";
+                "boundsCheck(buf, Int64(pos + " + NumToString(struct_def.bytesize) + "))";
             int cnt = 0;
             const std::map<std::string, size_t> TypeSize = {
               {"UInt8",  1},
@@ -268,7 +291,10 @@ public:
               {"Int16",  2},
               {"Int32",  4},
               {"Int64",  8},
-              {"Bool",   1}
+              {"Bool",   1},
+              {"Float16", 2},
+              {"Float32", 4},
+              {"Float64", 8}
             };
 
             for (auto element : struct_def.fields.vec) {
@@ -276,16 +302,9 @@ public:
                 const auto& field = *element;
                 FLATBUFFERS_ASSERT(TypeSize.count(get_type_method) != 0);
                 size_t field_size = TypeSize.at(get_type_method);
-                if (cnt == 0) {
-                    std::string type_buf = "(buf[Int64(pos)..Int64(pos + " + std::to_string(field_size) + ")])";
-                    code_ += Name(field) + " = get" + get_type_method + type_buf;
-                } else {
-                    std::string start = "pos + " + std::to_string(cnt) + " * BYTE_ALIGNMENT";
-                    std::string end = start + " + " + std::to_string(field_size);
-
-                    std::string type_buf = "(buf[Int64(" + start + ")..Int64(" + end + ")])";
-                    code_ += Name(field) + " = get" + get_type_method + type_buf;
-                }
+                code_.SetValue("OFFSET", NumToString(field.value.offset));
+                std::string type_buf = "(buf[Int64(pos + {{OFFSET}})..Int64(pos + {{OFFSET}} + " + std::to_string(field_size) + ")])";
+                code_ += Name(field) + " = get" + get_type_method + type_buf;
                 cnt++;
             }
             Outdent();
@@ -307,6 +326,7 @@ public:
         GenObjectHeader(struct_def);
         GenTableAccessors(struct_def);
         GenTableReader(struct_def);
+        GenTableWriter(struct_def);
 
         Outdent();
         code_ += "}\n";
@@ -340,6 +360,161 @@ public:
         }
     }
 
+    void GenTableWriter(const StructDef &struct_def) {
+        std::vector<std::string> require_fields;
+        std::vector<std::string> create_func_body;
+        std::vector<std::string> create_func_header;
+        const auto should_generate_create = struct_def.fields.vec.size() != 0;
+
+        code_.SetValue("NUMBEROFFIELDS", NumToString(struct_def.fields.vec.size()));
+        code_ +=
+            "{{ACCESS_TYPE}}static func start{{SHORT_STRUCTNAME}}(builder: Builder): Unit "
+            "{ builder.startObject({{NUMBEROFFIELDS}}) }";
+
+        for (auto it = struct_def.fields.vec.begin(); it != struct_def.fields.vec.end(); ++it) {
+            auto& field = **it;
+            if (field.deprecated) {
+                continue;
+            }
+            auto offset = it - struct_def.fields.vec.begin();
+            GenTableWriterFields(field, offset, &create_func_body, &create_func_header);
+        }
+        code_ +=
+            "{{ACCESS_TYPE}}static func end{{SHORT_STRUCTNAME}}(builder: Builder): UInt32 {"
+            "return builder.endObject()}";
+
+        if (should_generate_create) {
+            code_ += "static func create{{SHORT_STRUCTNAME}}(";
+            Indent();
+            code_ += "builder: Builder,";
+            for (auto it = create_func_header.begin(); it < create_func_header.end();
+                ++it) {
+                code_ += *it + "\\";
+                if (it < create_func_header.end() - 1) code_ += ",";
+            }
+            code_ += "";
+            Outdent();
+            code_ += "): UInt32 {";
+            Indent();
+            code_ += "{{STRUCTNAME}}.start{{SHORT_STRUCTNAME}}(builder)";
+            for (auto it = create_func_body.begin(); it < create_func_body.end();
+                ++it) {
+                code_ += *it;
+            }
+            code_ +=
+                "return {{STRUCTNAME}}.end{{SHORT_STRUCTNAME}}(builder)";
+            Outdent();
+            code_ += "}";
+        }
+    }
+
+    void GenTableWriterFields(const FieldDef &field,
+                                const size_t offset,
+                                std::vector<std::string> *create_body,
+                                std::vector<std::string> *create_header) {
+        std::string builder_string = ", builder: Builder) {";
+        auto &create_func_body = *create_body;
+        auto &create_func_header = *create_header;
+        const auto field_var = Name(field);
+        const auto type = GenType(field.value.type);
+        const auto opt_scalar =
+        field.IsOptional() && IsScalar(field.value.type.base_type);
+        const auto nullable_type = opt_scalar ? type + "?" : type;
+        auto name = MakeScreamingCamel(field.name);
+
+        code_.SetValue("FIELDVAR", field_var);
+        code_.SetValue("VALUENAME", EscapeKeyword(MakeCamel(field.name, true)));
+        code_.SetValue("VALUETYPE", type);
+        code_.SetValue("OFFSET", NumToString(offset));
+        code_.SetValue("CONSTANT", CangjieConstant(field));
+        // add static func addXXX
+        std::string check_if_vector =
+            (IsVector(field.value.type) || IsArray(field.value.type)) ? "Vector("
+                                                                    : "(";
+        const auto body = "add{{VALUENAME}}" + check_if_vector + field_var + ": ";
+        code_ += "{{ACCESS_TYPE}}static func " + body + "\\";
+        const auto addCall = "{{STRUCTNAME}}.add" + EscapeKeyword(MakeCamel(field.name, true))
+            + check_if_vector + field_var + ", builder)";
+        create_func_body.insert(create_func_body.begin(), addCall);
+
+        // add basetype
+        if (IsScalar(field.value.type.base_type) &&
+            !IsBool(field.value.type.base_type)) {
+            code_ +=
+                "{{VALUETYPE}}" + builder_string;
+            Indent();
+            if (IsEnum(field.value.type)) {
+                code_.SetValue("BASETYPE", GenTypeBasic(field.value.type, false));
+                code_ += "builder.prepend{{BASETYPE}}Slot({{OFFSET}}, Enum{{VALUETYPE}}Values({{FIELDVAR}}), {{CONSTANT}})";
+            } else {
+                code_ += "builder.prepend{{VALUETYPE}}Slot({{OFFSET}}, {{FIELDVAR}}, {{CONSTANT}})";
+            }
+            Outdent();
+            code_ += "}";
+
+            create_func_header.push_back(field_var + ": " + type);
+            WriterFieldAddBaseType(field, create_func_header);
+            return;
+        }
+
+        // add Bool
+        if (IsBool(field.value.type.base_type)) {
+            std::string default_value = field.value.constant == "0" ? "false" : "true";;
+            
+            code_.SetValue("CONSTANT", default_value);
+            code_.SetValue("VALUETYPE", field.IsOptional() ? "Bool?" : "Bool");
+            code_ +=
+                "{{VALUETYPE}}" + builder_string;
+            Indent();
+            code_ += "builder.prepend" + GenMethod(field) + "Slot({{OFFSET}}, {{FIELDVAR}}, {{CONSTANT}})";
+            Outdent();
+            code_ += "}";
+            create_func_header.push_back(field_var + ": " + nullable_type);
+            return;
+        }
+
+        // add struct
+        if (IsStruct(field.value.type)) {
+            code_ += type + builder_string;
+            Indent();
+            code_ += "let off{{VALUENAME}} = create{{VALUETYPE}}(builder, {{FIELDVAR}})";
+            code_ += "builder.prepend" + GenMethod(field) + "Slot({{OFFSET}}, off{{VALUENAME}}, {{CONSTANT}})";
+            Outdent();
+            code_ += "}";
+            create_func_header.push_back(field_var + ": " + type);
+            return;
+        }
+
+        // add table
+        const auto arg_label =
+            Name(field) +
+            (IsVector(field.value.type) || IsArray(field.value.type)
+                ? "VectorOffset"
+                : "UInt32");
+        create_func_header.push_back(field_var + ": " + "UInt32");
+        code_ += "UInt32" + builder_string;
+        Indent();
+        code_ += "builder.prepend" + GenMethod(field) + "Slot({{OFFSET}}, {{FIELDVAR}}, {{CONSTANT}})";
+        Outdent();
+        code_ += "}";
+        const auto vectortype = field.value.type.VectorType();
+
+        // add vector
+        if ((vectortype.base_type == BASE_TYPE_STRUCT &&
+            field.value.type.struct_def->fixed) &&
+            (IsVector(field.value.type) || IsArray(field.value.type))) {
+
+            code_ += "{{ACCESS_TYPE}}static func startVectorOf{{VALUENAME}}"
+                    "(size: Int64, builder: Builder) {";
+            Indent();
+            auto alignment = InlineAlignment(vectortype);
+            auto elem_size = InlineSize(vectortype);
+            code_ += "builder.startVector(" + NumToString(elem_size) + ", size, "+ NumToString(alignment) + ")";
+            Outdent();
+            code_ += "}";
+        }
+    }
+
     inline std::string GenOption(const EnumDef& enum_def) { return "Option<" + NameWrappedInNameSpace(enum_def) + ">"; }
 
     std::string GetUnionElement(const EnumVal& ev, bool wrap, bool actual_type, bool native_type = false)
@@ -364,7 +539,7 @@ public:
         code_.SetValue("VALUENAME", func_name);
         code_.SetValue("VALUETYPE", type);
         code_.SetValue("OFFSET", name);
-        code_.SetValue("CONSTANT", field.value.constant); // field value
+        code_.SetValue("CONSTANT", CangjieConstant(field)); // field value
         bool opt_scalar = IsScalar(field.value.type.base_type);
         std::string def_Val = opt_scalar ? "{{VALUETYPE}}(0)" : "{{CONSTANT}}";
         bool optional = false;
@@ -380,8 +555,7 @@ public:
         }
 
         if (IsBool(field.value.type.base_type)) {
-            std::string default_value = "0" == field.value.constant ? "false" : "true";
-            code_.SetValue("CONSTANT", default_value);
+            code_.SetValue("CONSTANT", CangjieConstant(field));
             code_ += GenReaderMainBody(optional);
             Indent();
             code_ += GenOffset();
@@ -574,7 +748,7 @@ public:
         }
 
         if (vectortype.base_type == BASE_TYPE_STRING) {
-            code_ += "let ELEMENT_STRIDE: UInt32 = 4";
+            code_ += "let ELEMENT_STRIDE: UInt32 = {{SIZE}}";
             code_.SetValue("fieldNameCaps", MakeScreamingCamel(field.name));
             code_ += "let LENGTH: Int64 = {{ACCESS}}.getVectorLenBySlot({{fieldNameCaps}})";
             code_ += "var arr: Array<Option<String>> = Array<Option<String>>(LENGTH, repeat: None<String>)";
@@ -599,7 +773,7 @@ public:
         }
 
         if (IsEnum(vectortype)) {
-            code_ += "let ELEMENT_STRIDE: UInt32 = 4";
+            code_ += "let ELEMENT_STRIDE: UInt32 = {{SIZE}}";
             code_.SetValue("fieldNameCaps", MakeScreamingCamel(field.name));
             code_.SetValue("BASEVALUE", GenTypeBasic(vectortype, false));
             code_ += "let LENGTH: Int64 = {{ACCESS}}.getVectorLenBySlot({{fieldNameCaps}})";
@@ -610,11 +784,11 @@ public:
             code_ += "let p: UInt32 = start + UInt32(i) * ELEMENT_STRIDE";
             code_ += "arr[i] = if ({{ACCESS}}.getIndirect(p) == p) {";
             Indent();
-            code_ += "None<{{VALUETYPE}}>";
+            code_ += "EnumValues{{VALUETYPE}}(0)";
             Outdent();
             code_ += "} else {";
             Indent();
-            code_ += "EnumValues{{VALUETYPE}}({{ACCESS}}.getUInt8(start + UInt32(i)))";
+            code_ += "EnumValues{{VALUETYPE}}({{ACCESS}}.get{{BASEVALUE}}(p))";
             Outdent();
             code_ += "}";
             Outdent();
@@ -645,7 +819,7 @@ public:
             Indent();
             code_ += "let start = {{ACCESS}}.getVectorStartBySlot({{fieldNameCaps}})";
             code_ += "EnumValues" + GenType(vectortype.enum_def->underlying_type) +
-                "({{ACCESS}}.getUInt8(start + index))";
+                "({{ACCESS}}.get{{BASEVALUE}}(start + index))";
             Outdent();
             code_ += "}\n";
             for (auto& u_it : vectortype.enum_def->Vals()) {
@@ -721,7 +895,7 @@ public:
                  "{ \\";
         code_ += GenOffset() +
             "return o == 0 ? unit : {{VALUETYPE}}.lookupByKey(vector: "
-            "{{ACCESS}}.vector(o), key: key, fbb: {{ACCESS}}.bb) }";
+            "{{ACCESS}}.vector(o), key: key, builder: {{ACCESS}}.bb) }";
     }
 
     // Generates the reader for struct
@@ -757,6 +931,30 @@ public:
         code_ += "}\n";
     }
 
+    void GenStructWriter(const StructDef &struct_def) {
+        code_ += "func create{{STRUCTNAME}}(builder: Builder, obj: {{STRUCTNAME}})";
+        code_ += "{";
+        Indent();
+        code_ += "builder.prep(" + NumToString(struct_def.minalign) + ", " + NumToString(struct_def.bytesize) + ")";
+        for (auto it = struct_def.fields.vec.rbegin();
+            it != struct_def.fields.vec.rend(); ++it) {
+            auto &field = **it;
+            auto name = Name(field);
+            auto type = GenType(field.value.type);
+            code_.SetValue("VALUENAME", name);
+            code_.SetValue("VALUETYPE", type);
+            if (field.padding)
+                code_ += "builder.pad(" + NumToString(field.padding) + ")";
+            if (IsStruct(field.value.type)) {
+                FLATBUFFERS_ASSERT(false && "struct in struct are not yet supported");
+            } else {
+                code_ += "builder.prepend" + GenMethod(field) + "(obj.{{VALUENAME}})";
+            }
+        }
+        code_ += "return builder.offset()";
+        Outdent();
+        code_ += "}\n";
+    }
     /* generate code with the following format, for Char doesn't support convert int to Enum
      * enum test {
      *   none |
@@ -771,8 +969,15 @@ public:
      *   ]
      *   return e < 3 ? values[Int64(e)] : .none
      * }
+     * func EnumTypeValues(e: Type) : UInt32 {
+     *     return match (e) {
+     *         case Type.none => 0
+     *         case Type.one => 1
+     *         case Type.two => 2
+     *     }
+     * }
      */
-    void GenEnumValues(const EnumDef* enum_def)
+    void GenValueToEnum(const EnumDef* enum_def)
     {
         std::string enum_local_name = enum_def->name + "Type";
         code_.SetValue("ENUM_LOCAL_NAME", enum_local_name);
@@ -806,6 +1011,31 @@ public:
         code_ += "}\n";
     }
 
+    void GenEnumToValue(const EnumDef* enum_def)
+    {
+        std::string enum_local_name = enum_def->name + "Type";
+        code_ += "func Enum{{ENUM_NAME}}Values(e: {{ENUM_NAME}}) : {{BASE_TYPE}} {";
+        Indent();
+        code_ += "return match (e) {";
+        Indent();
+        std::string noneName;
+        int i = 1;
+        if (!enum_def->Vals().empty()) {
+            for (auto it = enum_def->Vals().begin(); it != enum_def->Vals().end(); ++it) {
+                const auto& ev = **it;
+                auto name = "." + enum_def->name + "_" + MakeScreamingCamel(ev.name);
+                code_.SetValue("ENUM_INT_VALUE", std::to_string(i - 1));
+                code_.SetValue("ENUM_KEY", name);
+                code_ += "case {{ENUM_NAME}}{{ENUM_KEY}} => {{ENUM_INT_VALUE}}";
+                ++i;
+            }
+        }
+        Outdent();
+        code_ += " }";
+        Outdent();
+        code_ += "}\n";
+    }
+
     void GenEnum(const EnumDef& enum_def)
     {
         if (enum_def.generated) {
@@ -833,7 +1063,8 @@ public:
         }
         Outdent();
         code_ += "}\n";
-        GenEnumValues(&enum_def);
+        GenValueToEnum(&enum_def);
+        GenEnumToValue(&enum_def);
     }
 
     void GenComment(const std::vector<std::string>& dc)
@@ -870,10 +1101,10 @@ public:
     {
         auto& value = field.value;
         FLATBUFFERS_ASSERT(value.type.enum_def);
-        auto& enum_def = *value.type.enum_def;
-        const auto& ev = **enum_def.Vals().begin();
-        std::string name = enum_def.name + "_" + MakeScreamingCamel(ev.name);
-        return "{{VALUETYPE}}." + name;
+        auto &enum_def = *value.type.enum_def;
+        auto enum_val = enum_def.FindByValue(value.constant);
+        return enum_val ? ("{{VALUETYPE}}." + enum_def.name + "_" + MakeScreamingCamel(enum_val->name))
+                        : value.constant;
     }
 
     std::string GenEnumConstructor(const std::string& at) { return "{{VALUETYPE}}(" + GenIndirect(at) + ") "; }
@@ -885,6 +1116,18 @@ public:
         auto ret = IsScalar(type.base_type) ? GenTypeBasic(type) : GenTypePointer(type, should_consider_suffix);
         ret = MakeCamelCase(ret);
         return ret;
+    }
+
+    std::string CangjieConstant(const FieldDef &field) {
+        const auto default_value =
+            StringIsFlatbufferNan(field.value.constant)                ? GenType(field.value.type) + ".NaN"
+            : StringIsFlatbufferPositiveInfinity(field.value.constant) ? GenType(field.value.type) + ".Max"
+            : StringIsFlatbufferNegativeInfinity(field.value.constant)
+                ? GenType(field.value.type) + ".Min"
+            : IsBool(field.value.type.base_type)
+                ? ("0" == field.value.constant ? "false" : "true")
+                : field.value.constant;
+        return default_value;
     }
 
     std::string MakeCamelCase(const std::string s) const
@@ -946,6 +1189,11 @@ public:
             default:
                 return "FlatBufferObject";
         }
+    }
+    std::string GenMethod(const FieldDef &field) {
+        return IsScalar(field.value.type.base_type)
+                ? MakeCamel(GenTypeBasic(field.value.type), false)
+                : (IsStruct(field.value.type) ? "Struct" : "UOffsetT");
     }
 
     std::string GenTypeBasic(const Type& type) const { return GenTypeBasic(type, true); }

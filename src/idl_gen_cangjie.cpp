@@ -453,7 +453,6 @@ public:
             code_ += "}";
 
             create_func_header.push_back(field_var + ": " + type);
-            WriterFieldAddBaseType(field, create_func_header);
             return;
         }
 

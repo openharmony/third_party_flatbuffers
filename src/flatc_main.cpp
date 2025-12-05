@@ -24,7 +24,6 @@
 #include "flatbuffers/flatc.h"
 #include "flatbuffers/util.h"
 #include "idl_gen_binary.h"
-#include "idl_gen_cangjie.h"
 #include "idl_gen_cpp.h"
 #include "idl_gen_csharp.h"
 #include "idl_gen_dart.h"
@@ -145,11 +144,6 @@ int main(int argc, const char *argv[]) {
       flatbuffers::FlatCOption{ "", "nim", "",
                                 "Generate Nim files for tables/structs" },
       flatbuffers::NewNimBfbsGenerator(flatbuffers_version));
-
-  flatc.RegisterCodeGenerator(
-      flatbuffers::FlatCOption{ "", "cangjie", "",
-                                "Generate CangJie files for tables/structs" },
-      flatbuffers::NewCangjieCodeGenerator());
 
   flatc.RegisterCodeGenerator(
       flatbuffers::FlatCOption{ "p", "python", "",

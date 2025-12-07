@@ -37,8 +37,8 @@ namespace cpp17 {
 }  // namespace cpp17
 
 namespace cpp11 {
-#include "monster_test_generated.h"
-#include "optional_scalars_generated.h"
+#include "../monster_test_generated.h"
+#include "../optional_scalars_generated.h"
 }  // namespace cpp11
 
 using ::cpp17::MyGame::Example::Monster;

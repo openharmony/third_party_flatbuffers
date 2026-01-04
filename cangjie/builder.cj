@@ -7,7 +7,6 @@
 package std.ast
 
 import std.collection.{HashMap, ArrayList}
-import std.sort.sort
 
 const INITIAL_VTABLE_NUM = 16
 
@@ -351,6 +350,42 @@ class Builder {
         // Copy bytes
         v.copyTo(this.bytes[Int64(this.head)..])
 
+        return this.endVector(v.size)
+    }
+
+    /*
+     * Create an Int32 vector and return its offset.
+     */
+    func createInt32Vector(v: Array<Int32>): UInt32 {
+        this.assertNotNested()
+        this.startVector(4, v.size, 4)
+        for (i in v.size - 1..=0 : -1) {
+            this.prependInt32(v[i])
+        }
+        return this.endVector(v.size)
+    }
+
+    /*
+     * Create a UInt32 vector and return its offset.
+     */
+    func createUInt32Vector(v: Array<UInt32>): UInt32 {
+        this.assertNotNested()
+        this.startVector(4, v.size, 4)
+        for (i in v.size - 1..=0 : -1) {
+            this.prependUInt32(v[i])
+        }
+        return this.endVector(v.size)
+    }
+
+    /*
+     * Create a UInt64 vector and return its offset.
+     */
+    func createUInt64Vector(v: Array<UInt64>): UInt32 {
+        this.assertNotNested()
+        this.startVector(8, v.size, 8)
+        for (i in v.size - 1..=0 : -1) {
+            this.prependUInt64(v[i])
+        }
         return this.endVector(v.size)
     }
 

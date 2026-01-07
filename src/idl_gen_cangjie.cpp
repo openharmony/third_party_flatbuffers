@@ -710,6 +710,7 @@ public:
 
         if (is_vector_of_integers) {
             code_ += GenOffsetU32();
+            code_ += "if (o == 0) { return Array<{{VALUETYPE}}>() }";
             code_ += "let vectorLoc: UInt32 = " + GenIndirect("o + {{ACCESS}}.pos");
             code_ += "let vectorLength: UInt32 = {{ACCESS}}.getUInt32(vectorLoc)";
             code_ += "let vectorStart = vectorLoc + 4";
@@ -730,6 +731,7 @@ public:
 
         if (is_vector_of_structs) {
             code_ += GenOffsetU32();
+            code_ += "if (o == 0) { return Array<{{VALUETYPE}}>() }";
             code_ += "let vectorLoc: UInt32 = " + GenIndirect("o + {{ACCESS}}.pos");
             code_ += "let vectorLength: UInt32 = {{ACCESS}}.getUInt32(vectorLoc)";
             code_ += "let vectorStart = vectorLoc + 4";

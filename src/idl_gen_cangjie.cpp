@@ -516,13 +516,13 @@ public:
 
     inline std::string GenOption(const EnumDef& enum_def) { return "Option<" + NameWrappedInNameSpace(enum_def) + ">"; }
 
-    std::string GetUnionElement(const EnumVal& ev, bool wrap, bool actual_type, bool native_type = false)
+    std::string GetUnionElement(const EnumVal& ev, bool wrap, bool actual_type)
     {
         if (ev.union_type.base_type == BASE_TYPE_STRUCT) {
             auto name = actual_type ? ev.union_type.struct_def->name : Name(ev);
             return wrap ? WrapInNameSpace(ev.union_type.struct_def->defined_namespace, name) : name;
         } else if (ev.union_type.base_type == BASE_TYPE_STRING) {
-            return actual_type ? (native_type ? "std::string" : "flatbuffers::String") : Name(ev);
+            return actual_type ? "String" : Name(ev);
         } else {
             FLATBUFFERS_ASSERT(false);
             return Name(ev);
@@ -602,8 +602,17 @@ public:
             code_.SetValue("CONSTANT", GenType(field.value.type) + "()");
             code_ += GenReaderMainBody(is_required);
             Indent();
-            code_ += GenOffsetU32();
-            code_ += required_reader + GenConstructor("o + {{ACCESS}}.pos");
+            code_ += GenOffset();
+            code_ += "let off : UInt32 = UInt32(o) + {{ACCESS}}.pos";
+            code_ += "return if (o == 0) {";
+            Indent();
+            code_ += "{{CONSTANT}}";
+            Outdent();
+            code_ += "} else {";
+            Indent();
+            code_ += GenConstructor("off");
+            Outdent();
+            code_ += "}";
             Outdent();
             code_ += "}";
             return;
@@ -638,14 +647,15 @@ public:
                 code_.SetValue("CONSTANT", "\"\"");
                 code_ += GenReaderMainBody(is_required);
                 Indent();
-                code_ += GenOffsetU32() + " + {{ACCESS}}.pos";
+                code_ += GenOffset();
+                code_ += "let off : UInt32 = UInt32(o) + {{ACCESS}}.pos";
                 code_ += "return if (o == 0) {";
                 Indent();
                 code_ += "{{CONSTANT}}";
                 Outdent();
                 code_ += "} else {";
                 Indent();
-                code_ += "{{ACCESS}}.getString(o)";
+                code_ += "{{ACCESS}}.getString(off)";
                 Outdent();
                 code_ += "}";
                 Outdent();
@@ -672,10 +682,15 @@ public:
                     code_ += "let off : UInt32 = UInt32(o) + {{ACCESS}}.pos";
                     code_ += "return match (this.Get" + MakeCamel(field.name, true) + "Type()) {";
                     Indent();
-                    auto struct_constructor = enum_name + "(this.table.bytes, " + "off)";
+                    std::string struct_constructor;
+                    if (ev.union_type.base_type == BASE_TYPE_STRING) {
+                        struct_constructor = "this.table.getString(off)";
+                    } else {
+                        struct_constructor = enum_name + "(this.table.bytes, " + "off)";
+                    }
                     option_some = "Some<" + enum_name + ">(" + struct_constructor + ")";
                     option_none = "None<" + enum_name + ">";
-                    code_ += "case " + field.value.type.enum_def->name + "_" + ev.name + " => " + option_some;
+                    code_ += "case " + field.value.type.enum_def->name + "_" + MakeScreamingCamel(ev.name) + " => " + option_some;
                     code_ += "case _ => " + option_none;
                     Outdent();
                     code_ += "}";
@@ -838,7 +853,12 @@ public:
                 code_ += "let vectorStart = " + GenIndirect("UInt32(o) + {{ACCESS}}.pos");
                 code_ += "match (this.Get" + MakeCamel(field.name, true) + "Type(index)) {";
                 Indent();
-                auto ctor = enum_name + "({{ACCESS}}.bytes, vectorStart + (index + 1) * 4)";
+                std::string ctor;
+                if (ev.union_type.base_type == BASE_TYPE_STRING) {
+                    ctor = "{{ACCESS}}.getString(vectorStart + (index + 1) * 4)";
+                } else {
+                    ctor = enum_name + "({{ACCESS}}.bytes, vectorStart + (index + 1) * 4)";
+                }
                 std::string option_some = "Some(" + ctor + ")";
                 std::string option_none = "None<" + enum_name + ">";
                 code_ += "case " + GenType(vectortype.enum_def->underlying_type) + "." + field.value.type.enum_def->name

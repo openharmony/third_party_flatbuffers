@@ -46,12 +46,18 @@ class Table {
 
     func getVectorLenBySlot(slot: UInt16): Int64 {
         let offsetVal: UInt16 = this.offset(slot)
+        if (offsetVal == 0) {
+            return 0
+        }
         let lenPos: UInt32 = this.getIndirect(UInt32(offsetVal) + this.pos)
         return Int64(getUInt32(this.bytes[Int64(lenPos)..Int64(lenPos + 4)]))
     }
 
     func getVectorStartBySlot(slot: UInt16): UInt32 {
         let offsetVal: UInt16 = this.offset(slot)
+        if (offsetVal == 0) {
+            return 0
+        }
         let lenPos: UInt32 = this.getIndirect(UInt32(offsetVal) + this.pos)
         return lenPos + SIZE_OF_UINT32
     }
@@ -158,7 +164,11 @@ class Table {
     }
 
     func getInt32Slot(slot: UInt16, default: Int32): Int32 {
-        return Int32(this.getUInt32Slot(slot, UInt32(default)))
+        let offsetVal: UInt16 = this.offset(slot)
+        if (offsetVal == 0) {
+            return default
+        }
+        return this.getInt32(this.pos + UInt32(offsetVal))
     }
 
     func getUInt64Slot(slot: UInt16, default: UInt64): UInt64 { 

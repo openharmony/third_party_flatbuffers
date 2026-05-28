@@ -6,14 +6,14 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
-cp ../*.cj ./
+cp ../../*.cj ../
 
 flatc --no-warnings --cangjie -o ./ ./monster.fbs
 
-find . -name '*.cj' -print0 | xargs -0 sed -i 's/package std.ast//g'
+find ../ -name '*.cj' -print0 | xargs -0 sed -i 's/package std.ast//g'
 
-cjc ./*.cj ./all/main.cj -Woff unused --test
+cjc ../*.cj ./*.cj -Woff unused --test
 
 ./main
 
-rm ./*.cj ./*.cjo ./main
+rm ../*.cj ./monster_generated.cj ./*.cjo ./main
